@@ -19,6 +19,9 @@ def parse_games(team: str, year: int, file = None):
     else:
         url = f'{base_url}/teams/{team}/{year}_games.html'
         res = requests.get(url)
+        if res.status_code == 429: 
+            print(f'Got rate limited for {team} {year}...')
+            exit(1)
         soup = BeautifulSoup(res.content, 'html.parser')
 
     table = soup.find(id='games')
@@ -84,6 +87,8 @@ def parse_games(team: str, year: int, file = None):
     with open(f'pickles/{team}_{year}.pickle', 'wb') as f: pickle.dump((games, officials), f)   
     print(f'Finished {team} {year}')
 
+    time.sleep(60)
+
 
 def write_to_db(team: str, year: int):
     file = open(f'pickles/{team}_{year}.pickle', 'rb')
@@ -94,4 +99,4 @@ def write_to_db(team: str, year: int):
 
 if __name__ == '__main__': 
     # We already did 2022 before. For each team, gonna do 2012-2022 inclusive.
-    for i in range(2012, 2022): parse_games('MIA', i)
+    for i in range(2015, 2022): parse_games('MIA', i)
