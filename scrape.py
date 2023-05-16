@@ -75,7 +75,6 @@ def parse_games(team: str, year: int, file = None):
                 print("Sleeping...")
                 time.sleep(60)
 
-
         except (AttributeError, TypeError): continue
         except Exception as e:
             print(f'Error parsing games for {team} in {year}: ', e)
