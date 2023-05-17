@@ -19,7 +19,7 @@ for every year we parse. That adds up across 30 teams * 20 years.
 """
 class RequestLimiter:
     def __init__(self, request_limit, blocking_time):
-        self.request_limiit = request_limit
+        self.request_limit = request_limit
         self.blocking_time = blocking_time 
         self.request_count = 0 
         self.last_request_time = time.time()
@@ -59,7 +59,7 @@ def parse_games(team: str, year: int, file = None, limiter: RequestLimiter = Non
     else:
         url = f'{base_url}/teams/{real_team}/{year}_games.html'
         # Tricky tricky!
-        res = limiter.get(url) if limiter else requests.get(url)
+        res = limiter.get(url) if limiter is not None else requests.get(url)
         if res.status_code == 429: 
             print(f'Got rate limited for {team} {year}...')
             exit(1)
@@ -97,7 +97,7 @@ def parse_games(team: str, year: int, file = None, limiter: RequestLimiter = Non
             if next_url is None: raise Exception(f"Couldn't find follow-up href for {team}")
 
             # Pull all the official names
-            next_res = limiter.get(next_url) if limiter else requests.get(next_url) # tricky tricky!
+            next_res = limiter.get(next_url) if limiter is not None else requests.get(next_url) # tricky tricky!
             next_soup = BeautifulSoup(next_res.content, 'html.parser')
             off_links = next_soup.find_all('a', href=lambda href: href and 'referee' in href)
             for olink in off_links:
@@ -149,8 +149,8 @@ if __name__ == '__main__':
     #         else: parse_games(team, year, limiter=limiter)
 
     limiter = RequestLimiter(request_limit=19, blocking_time=70)
-    parse_games('MIA', 2016)
-    parse_games('MIA', 2017)
-    parse_games('MIA', 2018)
-    parse_games('MIA', 2019)
+    parse_games('MIA', 2016, limiter=limiter)
+    parse_games('MIA', 2017, limiter=limiter)
+    parse_games('MIA', 2018, limiter=limiter)
+    parse_games('MIA', 2019, limiter=limiter)
 
