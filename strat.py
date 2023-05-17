@@ -1,5 +1,7 @@
-def bet_on_winning_refs():
-    pass
+from db import DB
 
-if __name__ == '__main__':
-    bet_on_winning_refs()
+# def bet_on_winning_refs():
+#     pass
+
+# if __name__ == '__main__':
+#     bet_on_winning_refs()

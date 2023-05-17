@@ -1,5 +1,9 @@
+import pickle
 import sqlite3
 from typing import List, Tuple
+
+WEST_TEAMS = ['DEN', 'MEM', 'SAC', 'PHO', 'LAC', 'GSW', 'LAL', 'MIN', 'NOP', 'OKC', 'DAL', 'UTA', 'POR', 'HOU', 'SAS']
+EAST_TEAMS = ['MIL', 'BOS', 'PHI', 'CLE', 'NYK', 'BRK', 'MIA', 'ATL', 'TOR', 'CHI', 'IND', 'WAS', 'ORL', 'CHO', 'DET']
 
 class DB: 
     def __init__(self, db_file):
@@ -115,8 +119,43 @@ class DB:
 
         self.insert_games(games, officials)
 
+
 def init_table(): 
     with DB('db/nba.db') as db: db.create_tables()
 
+def grab_pickle(team: str, year: int):
+    try:
+        file = open(f'pickles/{team}_{year}.pickle', 'rb')
+        games, officials = pickle.load(file)
+        return (games, officials)
+    except Exception as e:
+        print(e)
+        return (None, None)
 
-if __name__ == '__main__': init_table()
+def write_to_db(team: str, year: int):
+    file = open(f'pickles/{team}_{year}.pickle', 'rb')
+    games, officials = pickle.load(file)
+    file.close()
+    with DB('db/nba.db') as db: db.insert_games(games, officials)
+
+def team_year_pairs(start: int, end: int):
+    for team in WEST_TEAMS + EAST_TEAMS:
+        for year in range(start, end + 1):
+            if team == 'NOP' and year <= 2013: continue 
+            yield (team, year)
+
+def check_pickles():
+    sizes = {}
+    for team, year in team_year_pairs(2012, 2022): 
+        games, officials = grab_pickle(team, year)
+        if games is None or officials is None: raise Exception(f'Unable to parse pickle for {team} {year}')
+
+        game_len, off_len = len(games), len(officials)
+        if game_len != off_len: raise Exception(f'{team} {year}: {game_len} != {off_len}')
+
+        if game_len not in sizes: sizes[game_len] = []
+        sizes[game_len].append((team, year))
+    # print(sizes)
+
+if __name__ == '__main__': 
+    check_pickles()
