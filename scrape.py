@@ -1,12 +1,12 @@
 import pickle
 import time
+import os
 from typing import List, Tuple
-
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-
 from db import DB
+import argparse 
 
 """
 NOTE: Can't do this more than 20 times in one minute
@@ -14,14 +14,23 @@ or we get fked by rate limiting
 """
 def parse_games(team: str, year: int, file = None):
     base_url = 'https://www.basketball-reference.com'
+    
+    # edge cases    
+    if team == 'BRK' and year <= 2012: real_team = 'NJN'
+    elif team == 'CHO' and year <= 2014: real_team = 'CHA'
+    elif team == 'NOP' and year <= 2013: 
+        print(f'Skipping pelicans {year}')
+        return
+    else: real_team = team
 
     if file: soup = BeautifulSoup(file, 'html.parser')
     else:
-        url = f'{base_url}/teams/{team}/{year}_games.html'
+        url = f'{base_url}/teams/{real_team}/{year}_games.html'
         res = requests.get(url)
         if res.status_code == 429: 
             print(f'Got rate limited for {team} {year}...')
             exit(1)
+        else: print(res.status_code)
         soup = BeautifulSoup(res.content, 'html.parser')
 
     table = soup.find(id='games')
@@ -58,7 +67,7 @@ def parse_games(team: str, year: int, file = None):
             # Pull all the official names
             next_res = requests.get(next_url)
             next_soup = BeautifulSoup(next_res.content, 'html.parser')
-            off_links = next_soup.find_all('a', href= lambda href: href and 'referee' in href)
+            off_links = next_soup.find_all('a', href=lambda href: href and 'referee' in href)
             for olink in off_links:
                 if olink.text == 'Referees': break
                 offs.append(olink.text)
@@ -85,7 +94,7 @@ def parse_games(team: str, year: int, file = None):
             # exit(1)
 
     with open(f'pickles/{team}_{year}.pickle', 'wb') as f: pickle.dump((games, officials), f)   
-    print(f'Finished {team} {year}')
+    print(f'Finished {team} {year} with {real_games} games')
 
     time.sleep(60)
 
@@ -98,5 +107,19 @@ def write_to_db(team: str, year: int):
 
 
 if __name__ == '__main__': 
-    # We already did 2022 before. For each team, gonna do 2012-2022 inclusive.
-    for i in range(2015, 2022): parse_games('MIA', i)
+    WEST_TEAMS = ['DEN', 'MEM', 'SAC', 'PHO', 'LAC', 'GSW', 'LAL', 'MIN', 'NOP', 'OKC', 'DAL', 'UTA', 'POR', 'HOU', 'SAS']
+    EAST_TEAMS = ['MIL', 'BOS', 'PHI', 'CLE', 'NYK', 'BRK', 'MIA', 'ATL', 'TOR', 'CHI', 'IND', 'WAS', 'ORL', 'CHO', 'DET']
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--region', choices=['east', 'west'], required=True)
+    
+    args = args.region
+    if region == 'east': TEAMS = EAST_TEAMS
+    else: TEAMS = WEST_TEAMS
+
+    for team in TEAMS:
+        for year in range(2012, 2022 + 1):
+            if os.path.isfile(f'pickles/{team}_{year}.pickle'): 
+                print(f'Skipping {team} {year}')
+                continue
+            else: parse_games(team, year)
