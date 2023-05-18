@@ -135,6 +135,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--side', choices=['E', 'W'], required=True)
     parser.add_argument('-y', '--years', nargs=2, type=int, metavar=('START', 'END'), required=True)
+    parser.add_argument('-nl', '--nolimiter', action='store_true')
 
     args = parser.parse_args()
     side = args.side
@@ -146,6 +147,7 @@ if __name__ == '__main__':
         for year in range(start_year, end_year + 1):
             if os.path.isfile(f'pickles/{team}_{year}.pickle'): print(f'Skipping {team} {year}')
             elif team == 'NOP' and year <= 2013: print(f'Skipping pelicans {year}')
+            elif args.nolimiter: parse_games(team, year)
             else: parse_games(team, year, limiter=limiter)
 
     # limiter = RequestLimiter(request_limit=19, blocking_time=70)
