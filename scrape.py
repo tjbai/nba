@@ -132,25 +132,25 @@ def parse_games(team: str, year: int, file = None, limiter: RequestLimiter = Non
 
 
 if __name__ == '__main__': 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-s', '--side', choices=['E', 'W'], required=True)
-    # parser.add_argument('-y', '--years', nargs=2, type=int, metavar=('START', 'END'), required=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--side', choices=['E', 'W'], required=True)
+    parser.add_argument('-y', '--years', nargs=2, type=int, metavar=('START', 'END'), required=True)
 
-    # args = parser.parse_args()
-    # side = args.side
-    # start_year, end_year = args.years
+    args = parser.parse_args()
+    side = args.side
+    start_year, end_year = args.years
 
-    # # real params should be 20 and 60
-    # limiter = RequestLimiter(request_limit=19, blocking_time=70) 
-    # for team in EAST_TEAMS if side == 'E' else WEST_TEAMS:
-    #     for year in range(start_year, end_year + 1):
-    #         if os.path.isfile(f'pickles/{team}_{year}.pickle'): print(f'Skipping {team} {year}')
-    #         elif team == 'NOP' and year <= 2013: print(f'Skipping pelicans {year}')
-    #         else: parse_games(team, year, limiter=limiter)
+    # real params should be 20 and 60
+    limiter = RequestLimiter(request_limit=19, blocking_time=70) 
+    for team in EAST_TEAMS if side == 'E' else WEST_TEAMS:
+        for year in range(start_year, end_year + 1):
+            if os.path.isfile(f'pickles/{team}_{year}.pickle'): print(f'Skipping {team} {year}')
+            elif team == 'NOP' and year <= 2013: print(f'Skipping pelicans {year}')
+            else: parse_games(team, year, limiter=limiter)
 
-    limiter = RequestLimiter(request_limit=19, blocking_time=70)
-    parse_games('MIA', 2016, limiter=limiter)
-    parse_games('MIA', 2017, limiter=limiter)
-    parse_games('MIA', 2018, limiter=limiter)
-    parse_games('MIA', 2019, limiter=limiter)
+    # limiter = RequestLimiter(request_limit=19, blocking_time=70)
+    # parse_games('MIA', 2016, limiter=limiter)
+    # parse_games('MIA', 2017, limiter=limiter)
+    # parse_games('MIA', 2018, limiter=limiter)
+    # parse_games('MIA', 2019, limiter=limiter)
 
